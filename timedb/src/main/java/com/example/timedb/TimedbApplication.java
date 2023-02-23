@@ -67,7 +67,7 @@ public class TimedbApplication {
 
 		// data insertion synchronously as POJO ,
 		// woking successfully
-		// insertData(client);
+		    insertData(client);
 
 		// fetch the data of all particular date based on ex input=6 days ago
 
@@ -77,7 +77,7 @@ public class TimedbApplication {
 		// woking successfully
 		 getAllDataByParticularDateAndField("2023-02-17T00:00:00.000Z", "projectId");
 
-		//getLastValueOfXDaysAgo(5);
+		getLastValueOfXDaysAgo(5);
 
 		// retrieveDataByRange(client);
 
