@@ -3,8 +3,12 @@ package com.example.timedb;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
-
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.temporal.*;
 import org.springframework.boot.SpringApplication;
@@ -22,35 +26,58 @@ import com.influxdb.query.FluxTable;
 
 @SpringBootApplication
 public class TimedbApplication {
+	
+	
+	/*
+	 * 
+	 * 
+	 * table     _measurement            _field              _value          _start                          _stop                                   _time                           userName
+
+ 	    0	      user                  projectId           4563          2023-01-24T13:00:19.298Z	       2023-02-23T13:00:19.298Z	              2023-02-15T09:29:11.694Z	        Anish Kumar
+        0         user		            projectId              4563           2023-01-24T13:00:19.298Z	   2023-02-23T13:00:19.298Z	               2023-02-15T09:34:49.18
+	 * 
+	 * 
+	 * 
+	 * Result --> series of "tables" with only single _field and a single _value column
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 */
 	// private static String
 	// INFLUX_TOKEN="pcQxhjjJnYl69cs7ZqPdhLPEl6AlDT4HDyV_CnloQ1DpzrV6uO_QfY49DFO0jdjyxM-MaZfx2TPGL4f6dfOdhA==";
 	private static String ORG = "CGI";
 
-	private static String BUCKET = "timeSeries1";
+	private static String BUCKET ="timeSeries1";
 
 	private static String token = "u22beltIC2rI5_oXwryFQh8w0scoIn8lYCqGoWmy8sqF5YK4SCWliTZX3gyR9ThpJEmqmK-h5qEqNHdPBfhNUw==";
 
 	private static InfluxDBClient client;
+	
+	private static String  MEASUREMENT="user";
+	
 
 	public static void main(String[] args) {
 		SpringApplication.run(TimedbApplication.class, args);
 
 		client = getInfluxDbClient();
-
-		//data insertion synchronously as POJO ,woking successfully
-		insertData(client);
 		
 		
-          // fetch the data of all particular date based on ex input=5 days ago
-		 // need more work to work successfully
-		 getDataByDaysAgo(5);
 
-		
-		// data based on particular input date and based on projectId attribute
-		 //woking successfully
-		getAllDataByParticularDateAndProjectId("2023-02-17T00:00:00.000Z", 4517);
+		// data insertion synchronously as POJO ,
+		// woking successfully
+		// insertData(client);
 
-		// getLastValueOfXDaysAgo(5);
+		// fetch the data of all particular date based on ex input=6 days ago
+
+		// getDataByDaysAgo(6);
+
+		// data based on particular input date and based on projectId attribute(_field)
+		// woking successfully
+		 getAllDataByParticularDateAndField("2023-02-17T00:00:00.000Z", "projectId");
+
+		//getLastValueOfXDaysAgo(5);
 
 		// retrieveDataByRange(client);
 
@@ -65,42 +92,49 @@ public class TimedbApplication {
 		// client.close();
 	}
 
-	// start:input date    =   2023-02-17 T00:00:00.000Z
-	// stop: input date +1 =   2023-02-18 T00:00:00.000Z
+	// start:input date = 2023-02-17 T00:00:00.000Z
+	// stop: input date +1 = 2023-02-18 T00:00:00.000Z
 	// start-->date included
 	// stop-->date excluded
-	// to get all data on particular date ,need start=date,stop=date+1, give all data of "date"
+	// to get all data on particular date ,need start=date,stop=date+1, give all
+	// data of "date",not of date+1
 
-	private static void getAllDataByParticularDateAndProjectId(String date, int id) {
+	private static void getAllDataByParticularDateAndField(String date,String field ) {
 
-		String incrementDate = Instant.parse(date).plus(Duration.ofDays(1)).toString();
+		System.out.println(date);
+
+		String incrementDate = getIncrementDateByOneDay(date);
+
+		System.out.println(incrementDate);
 
 		String start = "time(v:" + date + ")";
 		String stop = "time(v:" + incrementDate + ")";
 
-		String fluxQuery = "from(bucket:\"timeSeries1\")\n" 
-		+ " |> range(start:" + start + "," + "stop:" + stop + ")\n"
-				+ " |> filter(fn: (r) => r[\"_measurement\"] == \"user\")\n"
-				+ "  |> filter(fn: (r) => r[\"_field\"] == \"projectId\")\n"
-				+ "  |> filter(fn: (r) => r[\"userName\"] == \"Anish Kumar\" or r[\"userName\"] == \"Manish Kumar\")\n"
-				+ "  |>filter(fn: (r) => r._value==" + id + ")";
+		//String fluxQuery = "from(bucket:"+ BUCKET+")\n"
+		 //       + " |> range(start:" + start + "," + "stop:" + stop + ")\n"
+			//	+ " |> filter(fn: (r) => r[\"_measurement\"] =="+MEASUREMENT+")n"
+		//		+  "|> filter(fn: (r) => r[\"_field\"] == "+field+")";
 
 		
-
-
+		String fluxQuery="from(bucket: \"timeSeries1\")\n"
+				 + " |> range(start:" + start + "," + "stop:" + stop + ")\n"
+				+ "  |> filter(fn: (r) => r[\"_measurement\"] == \"user\")\n"
+				+ "  |> filter(fn: (r) => r[\"_field\"] == \"projectId\")\n"
+				+ "  |> filter(fn: (r) => r[\"userName\"] == \"Manish Kumar\")";
 		QueryApi queryApi = client.getQueryApi();
 
 		List<FluxTable> userTables = queryApi.query(fluxQuery);
 		System.out.println(userTables.size());
-	for (FluxTable u : userTables) {
-		 System.out.println();
-		List<FluxRecord> flxRecord = u.getRecords();
-		System.out.println("../....startTime................../_field............/_value............/userName.");
-		 for (FluxRecord r : flxRecord) {
-	  
-		System.out.println(r.getMeasurement()+"..." +r.getTime()+"....."+r.getValueByKey("_field")+"......."+r.getValueByKey("_value")+"..."+r.getValueByKey("userName"));
-		 System.out.println();
-		 }
+		for (FluxTable u : userTables) {
+			System.out.println();
+			List<FluxRecord> flxRecord = u.getRecords();
+			System.out.println("../....startTime................../_field............/_value............/userName.");
+			for (FluxRecord r : flxRecord) {
+
+				System.out.println(r.getMeasurement() + "..." + r.getTime() + "....." + r.getValueByKey("_field")
+						+ "......." + r.getValueByKey("_value") + "..." + r.getValueByKey("userName"));
+				System.out.println();
+			}
 		}
 
 	}
@@ -127,58 +161,52 @@ public class TimedbApplication {
 	}
 
 	/**
-	 * option now = () => 2022-01-01T00:00:00Z
+	 * start date: inputDate stop:incrementDate
 	 * 
-	 * date.time(t: -1h)// Returns 2021-12-31T23:00:00.000000000Z
-	 * 
-	 * Return the time for a given relative duration  
-	 *  option now = () =>               2023-02-22 05:40:50 GMT+5:30(current time)
-	 *   date.time(t: -10d)//    Returns 2023-02-12 05:40:50 GMT+5:30
 	 */
 	private static void getDataByDaysAgo(int days) {
-		
-		
-		// Return the time for a given relative duration  Using flux date.time() function
-		String mdate="date.time(t:-"+days+"d)";
-		
-		
-		//implementing  2023-02-22 05:40:50 GMT+5:30 -->2023-02-22 00:00:00
-		 // truncate to ChronoUnit.DAYS
-        // means unit smaller than DAY
-        // will be Zero   2023-02-22 05:40:50 GMT+5:30 -->2023-02-22 00:00:00
-		String date
-        = Instant.parse(mdate).truncatedTo(ChronoUnit.DAYS).toString();
-        
-  
 
-		String incrementDate = Instant.parse(date).plus(Duration.ofDays(1)).toString();
+		String date = getDateOfDaysAgo(days);
 
-		// Using flux time(v:date) function to convert string to time
+		String incrementDate = getIncrementDateByOneDay(date);
+ 
+		System.out.println(incrementDate);
+
+		
+
+		
+         getData(date,incrementDate);
+
+	}
+
+	private static void getData(String date, String incrementDate ) {
+		
 		String start = "time(v:" + date + ")";
 		String stop = "time(v:" + incrementDate + ")";
-				
-		String fluxQuery="from(bucket:\"timeSeries1\")\n"
-				+ " |> range(start:" + start + "," + "stop:" + stop + ")\n"
-				+ " |> filter(fn: (r) => r[\"_measurement\"] == \"user\")\n"
-				+ "  |> filter(fn: (r) => r[\"_field\"] == \"projectId\")\n"
-				+ "  |> filter(fn: (r) => r[\"userName\"] == \"Anish Kumar\" or r[\"userName\"] == \"Manish Kumar\")\n"
-				+ "  |>filter(fn: (r) => r._value==4517)";
-		
+	
+		// 
+		//String fluxQuery =  "from(bucket:"+ BUCKET+")\n"
+		//   + " |> range(start:" + start + "," + "stop:" + stop + ")\n"
+		//	+ " |> filter(fn: (r) => r[\"_measurement\"] =="+MEASUREMENT+")";
+		String fluxQuery="from(bucket: \"timeSeries1\")\n"
+				 + " |> range(start:" + start + "," + "stop:" + stop + ")\n"
+				+ "  |> filter(fn: (r) => r[\"_measurement\"] == \"user\")";
+
 		QueryApi queryApi = client.getQueryApi();
 
 		List<FluxTable> userTables = queryApi.query(fluxQuery);
 		System.out.println(userTables.size());
-	for (FluxTable u : userTables) {
-		 System.out.println();
-		List<FluxRecord> flxRecord = u.getRecords();
-		System.out.println("../....startTime................../_field............/_value............/userName.");
-		 for (FluxRecord r : flxRecord) {
-	  
-		System.out.println(r.getMeasurement()+"..." +r.getTime()+"....."+r.getValueByKey("_field")+"......."+r.getValueByKey("_value")+"..."+r.getValueByKey("userName"));
-		 System.out.println();
-		 }
-		}
+		for (FluxTable u : userTables) {
+			System.out.println();
+			List<FluxRecord> flxRecord = u.getRecords();
+			System.out.println("../....startTime................../_field............/_value............/userName.");
+			for (FluxRecord r : flxRecord) {
 
+				System.out.println(r.getMeasurement() + "..." + r.getTime() + "....." + r.getValueByKey("_field")
+						+ "......." + r.getValueByKey("_value") + "..." + r.getValueByKey("userName"));
+				System.out.println();
+			}
+		}
 	}
 
 	/**
@@ -188,7 +216,6 @@ public class TimedbApplication {
 	 * For POJO mapping, snake_case column names are mapped to camelCase field names
 	 * if exact matches not found.
 	 */
-
 
 	// get InfluxDbClient here
 	public static InfluxDBClient getInfluxDbClient() {
@@ -213,8 +240,36 @@ public class TimedbApplication {
 		writeApi.writeMeasurement(BUCKET, ORG, WritePrecision.NS, user);
 
 	}
+
 //last value can be fetched by flux last() function if we get the table based on days ago
 	private static void getLastValueOfXDaysAgo(int X) {
 
+		getDateOfDaysAgo(X);
+
+	}
+
+	private static String getDateOfDaysAgo(int days) {
+		// TODO Auto-generated method stub
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Calendar c = Calendar.getInstance();
+		c.add(Calendar.DATE, -days);
+
+		return dateFormat.format(c.getTime());
+	}
+
+	private static String getIncrementDateByOneDay(String date) {
+		// TODO Auto-generated method stub
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Calendar c = Calendar.getInstance();
+
+		try {
+			c.setTime(dateFormat.parse(date));
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		c.add(Calendar.DATE, 1);
+
+		return dateFormat.format(c.getTime());
 	}
 }
