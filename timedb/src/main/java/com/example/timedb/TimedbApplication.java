@@ -34,7 +34,7 @@ public class TimedbApplication {
 	 * table     _measurement            _field              _value          _start                          _stop                                   _time                           userName
 
  	    0	      user                  projectId           4563          2023-01-24T13:00:19.298Z	       2023-02-23T13:00:19.298Z	              2023-02-15T09:29:11.694Z	        Anish Kumar
-        0         user		            projectId              4563           2023-01-24T13:00:19.298Z	   2023-02-23T13:00:19.298Z	               2023-02-15T09:34:49.18
+        0             user		    projectId           4563           2023-01-24T13:00:19.298Z	        2023-02-23T13:00:19.298Z	        2023-02-15T09:34:49.18
 	 * 
 	 * 
 	 * 
@@ -60,37 +60,78 @@ public class TimedbApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(TimedbApplication.class, args);
-
-		client = getInfluxDbClient();
+                  client = getInfluxDbClient();
 		
 		
 
 		// data insertion synchronously as POJO ,
 		// woking successfully
-		    insertData(client);
+		   insertData(client);
 
+		// fetch all date of past X minues ago
+      
+		getAllDataByPastMinutes("30"); 
+		   
 		// fetch the data of all particular date based on ex input=6 days ago
-
-		// getDataByDaysAgo(6);
+		
+	  	getDataByDaysAgo(7);
 
 		// data based on particular input date and based on projectId attribute(_field)
 		// woking successfully
-		 getAllDataByParticularDateAndField("2023-02-17T00:00:00.000Z", "projectId");
+		
+		 getAllDataByParticularDate("2023-02-17T00:00:00.000Z", "projectId");
+		 
+		 
+          		
 
-		getLastValueOfXDaysAgo(5);
+		 // getLastValueOfXDaysAgo(5);
 
 		// retrieveDataByRange(client);
-
+       
+		  
 		/*
 		 * record is basically row in a table
 		 */
 		// delteRecordByTimeStamp();
 
-		// deleteData(client);
+		// deleteAllData();
 
 		System.out.println("Hello is the timeDb...2");
 		// client.close();
+		
+		
+
+		
+			
 	}
+	
+	
+	private static void getAllDataByPastMinutes(String minute) {
+		
+		//String start = "time(v:" + minute + ")";
+		
+		String fluxQuery="from(bucket: \"timeSeries1\")\n"
+				+ "  |> range(start: "+"-"+minute+"m"+","+" stop:now())\n"
+				+ "  |> filter(fn: (r) => r[\"_measurement\"] == \"user\")";
+		
+		QueryApi queryApi = client.getQueryApi();
+
+		List<FluxTable> userTables = queryApi.query(fluxQuery);
+		System.out.println(userTables.size());
+		for (FluxTable u : userTables) {
+			System.out.println();
+			List<FluxRecord> flxRecord = u.getRecords();
+			System.out.println("../....startTime................../_field............/_value............/userName.");
+			for (FluxRecord r : flxRecord) {
+
+				System.out.println(r.getMeasurement() + "..." + r.getTime() + "....." + r.getValueByKey("_field")
+						+ "......." + r.getValueByKey("_value") + "..." + r.getValueByKey("userName"));
+				System.out.println();
+			}
+		}
+		
+	}
+
 
 	// start:input date = 2023-02-17 T00:00:00.000Z
 	// stop: input date +1 = 2023-02-18 T00:00:00.000Z
@@ -99,7 +140,7 @@ public class TimedbApplication {
 	// to get all data on particular date ,need start=date,stop=date+1, give all
 	// data of "date",not of date+1
 
-	private static void getAllDataByParticularDateAndField(String date,String field ) {
+	private static void getAllDataByParticularDate(String date,String field ) {
 
 		System.out.println(date);
 
@@ -245,6 +286,8 @@ public class TimedbApplication {
 	private static void getLastValueOfXDaysAgo(int X) {
 
 		getDateOfDaysAgo(X);
+		
+		// need to complete
 
 	}
 
