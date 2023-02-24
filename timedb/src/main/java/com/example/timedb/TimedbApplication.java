@@ -34,15 +34,24 @@ public class TimedbApplication {
 	 * table     _measurement            _field              _value          _start                          _stop                                   _time                           userName
 
  	    0	      user                  projectId           4563          2023-01-24T13:00:19.298Z	       2023-02-23T13:00:19.298Z	              2023-02-15T09:29:11.694Z	        Anish Kumar
-        0             user		    projectId           4563           2023-01-24T13:00:19.298Z	        2023-02-23T13:00:19.298Z	        2023-02-15T09:34:49.18
+            0         user		    projectId           4563          2023-01-24T13:00:19.298Z	       2023-02-23T13:00:19.298Z	               2023-02-15T09:34:49.18           Anish kumar
 	 * 
 	 * 
 	 * 
 	 * Result --> series of "tables" with only single _field and a single _value column
 	 * 
 	 * 
+	 * The _measurement column shows the name of the measurement 
+	 * 
+	 * A field includes a field key stored in the _field column and a field value stored in the _value column.
 	 * 
 	 * 
+	 * 
+	 * Tags are indexed: Tags are optional. You don’t need tags in your data structure, but it’s typically a good idea to include tags.
+	 *  Because tags are indexed, queries on tags are faster than queries on fields. This makes tags ideal for storing commonly-queried metadata.
+	 * 
+	 * 
+	 * Timestamp-All data stored in InfluxDB has a _time column that stores timestamp (_time) column
 	 * 
 	 */
 	// private static String
@@ -90,7 +99,16 @@ public class TimedbApplication {
        
 		  
 		/*
-		 * record is basically row in a table
+		
+		 * 
+		 * **InfluxDB 2.6 ** supports deleting data by any column or tag except the following:
+                 *
+                 *   _time
+                 *  _field
+                 *   _value
+                 *    InfluxDB 2.6 does not support deleting data by field.
+		 * 
+		 * 
 		 */
 		// delteRecordByTimeStamp();
 
