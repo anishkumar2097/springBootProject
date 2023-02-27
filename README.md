@@ -9,7 +9,7 @@
 **-Deleting functionality is challenging for me,only able to delete entire bucket or drop table.**
 
 **Not enough resource available, to resolve influx Db error will be challenging for developers.
-flux Table storage is different from SQL.**
+flux Table storage is different from SQL.How we visulaize table in sql is different in flux**
 
 
 **-Retrieveing functionality at at particular point of time (based on _time column ) can be done, but not able to implement...community page says it can be done (filtering a record based on particulat timestamp(_time))**
