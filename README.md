@@ -1,8 +1,15 @@
 # springBootProject
 
+**Observation**
+
 **-Retrieveing functionality based on time range, at particular date ,based on X days ago,based on X minutes ago has been implemented**
 
 **-Updating functionality based on _field column, _value column, and tag column can be done**
+
+**-Deleting functionality is challenging for me,only able to delete entire bucket or drop table.**
+
+**Not enough resource available, to resolve influx Db error will be challenging for developers.
+flux Table storage is different from SQL.**
 
 
 **-Retrieveing functionality at at particular point of time (based on _time column ) can be done, but not able to implement...community page says it can be done (filtering a record based on particulat timestamp(_time))**
